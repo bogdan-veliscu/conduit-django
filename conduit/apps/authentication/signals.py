@@ -6,7 +6,7 @@ from .models import User
 
 
 @receiver(post_save, sender=User)
-def created_profile(sender, isinstance, created, *args, **kwargs)
+def created_related_profile(sender, instance, created, *args, **kwargs):
 
     if instance and created:
         instance.profile = Profile.objects.create(user=instance)
