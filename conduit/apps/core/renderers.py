@@ -1,20 +1,31 @@
 import json
 
 from rest_framework.renderers import JSONRenderer
+from rest_framework.utils.serializer_helpers import ReturnList
 
 
 class ConduitJSONRenderer(JSONRenderer):
     charset = 'utf-8'
     object_label = 'object'
+    object_label_plural = 'objects'
 
 
-    def render(self, data, mediat_type=None, renderer_context=None):
-        errors = data.get('errors',None)
+    def render(self, data, media_type=None, renderer_context=None):
+        if isinstance(data, ReturnList):
+            _data = json.loads(
+                super(ConduitJSONRenderer, self).render(data).decode('utf-8')
+            )
 
-        if errors is not None:
-            return super(ConduitJSONRenderer, self).render(data)
+            return json.dumps({
+                self.object_label_plural:data
+            })
+        else:
+            errors = data.get('errors',None)
 
-        return json.dumps({
-            self.object_label: data
-        })
+            if errors is not None:
+                return super(ConduitJSONRenderer, self).render(data)
+
+            return json.dumps({
+                self.object_label: data
+            })
 
