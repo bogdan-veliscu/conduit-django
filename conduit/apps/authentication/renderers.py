@@ -1,5 +1,3 @@
-import json
-
 from conduit.apps.core.renderers import ConduitJSONRenderer
 
 class UserJSONRenderer(ConduitJSONRenderer):
