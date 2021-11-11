@@ -186,3 +186,27 @@ class TagListAPIView(generics.ListAPIView):
             'tags': serializer.data
         }, status=status.HTTP_200_OK)
 
+
+class ArticlesFeedAPIView(generics.ListAPIView):
+    permissions_classes = (IsAuthenticated,)
+    queryset = Article.objects.all()
+    renderer_classes = (ArticleJSONRenderer,)
+    serializer_class = ArticleSerializer
+
+
+    def get_queryset(self):
+        return Article.objects.filter(
+            author__in = self.request.user.profile.follows.all()
+        )
+
+    def list(self, request):
+        queryset = self.get_queryset()
+        page = self.paginate_queryset(queryset)
+
+        serializer_context = {'request':request}
+        serializer = self.serializer_class(
+            page, context=serializer_context, many=True
+        )
+
+        return self.get_paginated_response(serializer.data)
+
