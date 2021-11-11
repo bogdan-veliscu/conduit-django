@@ -10,6 +10,11 @@ class ArticleSerializer(serializers.ModelSerializer):
     description = serializers.CharField(required=False)
     slug = serializers.SlugField(required=False)
 
+    favorited = serializers.SerializerMethodField()
+    favoritesCount = serializers.SerializerMethodField(
+        method_name='get_favorites_count'
+    )
+
     createdAt = serializers.SerializerMethodField(method_name='get_create_at')
     updatedAt = serializers.SerializerMethodField(method_name='get_updated_at')
 
@@ -21,6 +26,8 @@ class ArticleSerializer(serializers.ModelSerializer):
             'body',
             'createdAt',
             'description',
+            'favorited',
+            'favoritesCount',
             'slug',
             'title',
             'updatedAt',
@@ -30,6 +37,20 @@ class ArticleSerializer(serializers.ModelSerializer):
         author = self.context.get('author', None)
 
         return Article.objects.create(author=author, **validated_data)
+
+    def get_favorited(self, instace):
+        request = self.context.get('request', None)
+
+        if request is None:
+            return False
+
+        if not request.user.is_authenticated:
+            return False
+
+        return request.user.profile.has_favorited(instace)
+
+    def get_favorites_count(self, instace):
+        return instace.favorited_by.count()
 
     def get_create_at(self, instance):
         return instance.created_at.isoformat()
@@ -54,16 +75,20 @@ class CommentSerializer(serializers.ModelSerializer):
             'updatedAt'
         )
 
-        def create(self, validated_data):
-            article = self.context['article']
-            author = self.context['author']
+    def create(self, validated_data):
+        article = self.context['article']
+        author = self.context['author']
 
-            return Comment.objects.create(
-                author=author, article=article, **validated_data
-            )
+        return Comment.objects.create(
+            author=author, article=article, **validated_data
+        )
 
-        def get_create_at(self, instance):
-            return instance.created_at.isoformat()
+    def get_create_at(self, instance):
+        return instance.created_at.isoformat()
 
-        def get_updated_at(self, instace):
-            return instace.updated_at.isoformat()
+    def get_updated_at(self, instace):
+        return instace.updated_at.isoformat()
+
+    def get_favorites_count(self, instace):
+        return instace.favorited_by.count()
+
