@@ -2,7 +2,8 @@ from rest_framework import serializers
 
 from conduit.apps.profiles.serializers import ProfileSerilizer
 
-from .models import Article, Comment
+from .models import Article, Comment, Tag
+from .relations import TagRelatedField
 
 
 class ArticleSerializer(serializers.ModelSerializer):
@@ -14,6 +15,8 @@ class ArticleSerializer(serializers.ModelSerializer):
     favoritesCount = serializers.SerializerMethodField(
         method_name='get_favorites_count'
     )
+
+    tagList = TagRelatedField(many=True, required=False, source='tags')
 
     createdAt = serializers.SerializerMethodField(method_name='get_create_at')
     updatedAt = serializers.SerializerMethodField(method_name='get_updated_at')
@@ -29,14 +32,21 @@ class ArticleSerializer(serializers.ModelSerializer):
             'favorited',
             'favoritesCount',
             'slug',
+            'tagList',
             'title',
             'updatedAt',
         )
 
     def create(self, validated_data):
         author = self.context.get('author', None)
+        tags = validated_data.pop('tags', [])
 
-        return Article.objects.create(author=author, **validated_data)
+        article = Article.objects.create(author=author, **validated_data)
+
+        for tag in tags:
+            article.tags.add(tag)
+
+        return article
 
     def get_favorited(self, instace):
         request = self.context.get('request', None)
@@ -92,3 +102,11 @@ class CommentSerializer(serializers.ModelSerializer):
     def get_favorites_count(self, instace):
         return instace.favorited_by.count()
 
+
+class TagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tag
+        fields = ('tag',)
+
+    def to_representation(self, obj):
+        return obj.tag

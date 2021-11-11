@@ -4,7 +4,7 @@ from rest_framework.routers import DefaultRouter
 
 from .views import (
     ArticleViewSet, CommentListCreateAPIView, CommentsDestroyAPIView,
-    ArticlesFavoriteAPIView
+    ArticlesFavoriteAPIView, TagListAPIView
 )
 
 router = DefaultRouter(trailing_slash=False)
@@ -23,4 +23,5 @@ urlpatterns = [
         'articles/<slug:article_slug>/comments/<int:comment_pk>',
         CommentsDestroyAPIView.as_view()
     ),
+    path('tags', TagListAPIView.as_view()),
 ]
