@@ -1,0 +1,6 @@
+Django
+django-cors-middleware
+django-extensions
+djangorestframework
+PyJWT
+six
